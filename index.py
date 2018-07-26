@@ -1,4 +1,15 @@
-import argparse, logging, re, requests
+import argparse, logging, re, requests, os
+
+
+def create_nexus_credentials_at_workspace(host, username, password, repository):
+    workspace = os.getcwd()
+    nexus_data = {'nexus_host': '"%s"' % host,
+                  'nexus_username': '"%s"' % username,
+                  'nexus_password': '"%s"' % password,
+                  'nexus_repository': '"%s"' % repository}
+    file = open(workspace + '/.credentials', "w")
+    file.write(str(nexus_data))
+    file.close()
 
 
 def get_repository_format(hostname, repository_name):
@@ -72,6 +83,12 @@ def main(logger):
         return
     else:
         logger.info("Repository Format of %s is %s" % (args['repository'], repository_format))
+
+    if repository_format == 'docker':
+        logger.info("Using nexus-cli to un-tag extra blobs")
+        create_nexus_credentials_at_workspace(args['host'], args['username'], args['password'], args['repository'])
+    elif repository_format == 'maven2':
+        logger.info("Using Nexus REST APIs to delete extra components")
 
     logger.info("Main function execution finished.")
 
