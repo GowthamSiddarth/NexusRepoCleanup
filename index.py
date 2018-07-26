@@ -13,22 +13,32 @@ def init_logger():
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
+    return logger
 
-def init():
+
+def parse_args():
+    logger.info("Started executing parse_args()")
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--repository', help="Name of the repository to be cleaned", required=True)
     parser.add_argument('-k', '--keep', help="Number of assets/components to preserve after cleanup", required=True)
     parser.add_argument('--host', help="Host address of nexus repository", default="http://192.168.113.192:15921")
     parser.add_argument('-u', '--username', help="Username of the nexus repository admin", default="admin")
     parser.add_argument('-p', '--password', help="Password of the nexus repository admin", default="admin123")
+
+    logger.info("parse_args function execution finished")
     return vars(parser.parse_args())
 
 
-def main():
-
-    args = init()
-    print(args)
+def main(logger):
+    logger.info("Started executing main function")
+    args = parse_args()
+    logger.debug("Arguments parsed are: " + str(args))
+    logger.info("Main function execution finished.")
 
 
 if __name__ == '__main__':
-    main()
+    logger = init_logger()
+    logger.info("Logger Initialized...Calling main function")
+    main(logger)
+    logger.info("Returned from main execution. Ending Program!")
