@@ -1,7 +1,27 @@
 import argparse, logging, re, requests, os, subprocess, itertools
+from urllib.parse import urlparse
+
+
+def delete_extra_components(host, username, password, extra_components):
+    logger.info("Started executing delete_extra_components()")
+
+    parsed_url = urlparse(url=host)
+    component_del_base_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/components'
+    for extra_component in extra_components:
+        component_del_api = component_del_base_api + '/' +  extra_component['id']
+        logger.debug("Calling API to delete component: " + component_del_api)
+        try:
+            response = requests.delete(component_del_api)
+            response.raise_for_status()
+
+            logger.debug("API Response: " + response)
+        except requests.exceptions.RequestException as e:
+            logger.error("Exception occurred: " + e)
 
 
 def get_components(host, repository):
+    logger.info("Started executing get_components()")
+
     get_components_api, components = host + '/service/rest/beta/components?repository=' + repository, []
     try:
         while True:
@@ -16,7 +36,9 @@ def get_components(host, repository):
 
             get_components_api = host + '/service/rest/beta/components?repository=' + repository + '&continuation_token=' + continuation_token
 
-        return list(itertools.chain(*components))
+        components = list(itertools.chain(*components))
+        logger.info("%d components found in the repo %s" % (len(components), repository))
+        return components
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + e)
         return None
@@ -113,6 +135,8 @@ def main(logger):
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
         components = get_components(args['host'], args['repository'])
+        extra_components = sorted(components, key=lambda component: component.get('version'))[:-args['keep']]
+        delete_extra_components(args['host'], extra_components)
 
     logger.info("Main function execution finished.")
 
