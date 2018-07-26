@@ -1,4 +1,25 @@
-import argparse, logging, re, requests, os, subprocess
+import argparse, logging, re, requests, os, subprocess, itertools
+
+
+def get_components(host, repository):
+    get_components_api, components = host + '/service/rest/beta/components?repository=' + repository, []
+    try:
+        while True:
+            response = requests.get(get_components_api)
+            response.raise_for_status()
+
+            data = response.json()
+            components.append(data['items'])
+            continuation_token = data['continuation_token']
+            if continuation_token is None:
+                break
+
+            get_components_api = host + '/service/rest/beta/components?repository=' + repository + '&continuation_token=' + continuation_token
+
+        return list(itertools.chain(*components))
+    except requests.exceptions.RequestException as e:
+        logger.error("Exception occurred: " + e)
+        return None
 
 
 def create_nexus_credentials_at_workspace(host, username, password, repository):
@@ -12,10 +33,10 @@ def create_nexus_credentials_at_workspace(host, username, password, repository):
     file.close()
 
 
-def get_repository_format(hostname, repository_name):
+def get_repository_format(host, repository_name):
     logger.info("Started executing get_repository_type()")
 
-    get_repositories_api = hostname + '/service/rest/beta/repositories'
+    get_repositories_api = host + '/service/rest/beta/repositories'
     try:
         response = requests.get(get_repositories_api)
         response.raise_for_status()
@@ -91,7 +112,7 @@ def main(logger):
         subprocess.call(['nexus-cli', 'image', 'delete', '-name', args['component'], '-keep', str(args['keep'])])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
-
+        components = get_components(args['host'], args['repository'])
 
     logger.info("Main function execution finished.")
 
