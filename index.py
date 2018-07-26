@@ -14,9 +14,9 @@ def delete_extra_components(host, username, password, extra_components):
             response = requests.delete(component_del_api)
             response.raise_for_status()
 
-            logger.debug("API Response: " + response)
+            logger.debug("API Response: " + str(response))
         except requests.exceptions.RequestException as e:
-            logger.error("Exception occurred: " + e)
+            logger.error("Exception occurred: " + str(e))
 
     logger.info("delete_extra_components function execution finished")
 
@@ -40,10 +40,10 @@ def get_components(host, repository_name, component_name):
 
         components = [component for component in list(itertools.chain(*components)) if
                       component['name'] == component_name]
-        logger.info("%d components found in the repo %s" % (len(components), repository_name))
+        logger.info("%d components found in the repo %s for %s" % (len(components), repository_name, component_name))
         return components
     except requests.exceptions.RequestException as e:
-        logger.error("Exception occurred: " + e)
+        logger.error("Exception occurred: " + str(e))
         return None
 
 
@@ -79,7 +79,7 @@ def get_repository_format(host, repository_name):
 
         logger.warning("No repository found with given name: " + str(repository_name))
     except requests.exceptions.RequestException as e:
-        logger.error("Exception occurred: " + e)
+        logger.error("Exception occurred: " + str(e))
 
     return None
 
