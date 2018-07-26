@@ -18,6 +18,8 @@ def delete_extra_components(host, username, password, extra_components):
         except requests.exceptions.RequestException as e:
             logger.error("Exception occurred: " + e)
 
+    logger.info("delete_extra_components function execution finished")
+
 
 def get_components(host, repository):
     logger.info("Started executing get_components()")
@@ -45,6 +47,8 @@ def get_components(host, repository):
 
 
 def create_nexus_credentials_at_workspace(host, username, password, repository):
+    logger.info("Started executing create_nexus_credentials_at_workspace()")
+
     workspace = os.getcwd()
     nexus_data = {'nexus_host': '"%s"' % host,
                   'nexus_username': '"%s"' % username,
@@ -53,6 +57,8 @@ def create_nexus_credentials_at_workspace(host, username, password, repository):
     file = open(workspace + '/.credentials', "w")
     file.write(str(nexus_data))
     file.close()
+
+    logger.info("create_nexus_credentials_at_workspace function execution finished")
 
 
 def get_repository_format(host, repository_name):
