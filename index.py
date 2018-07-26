@@ -1,4 +1,20 @@
-import argparse, logging, re
+import argparse, logging, re, requests
+
+
+def get_repository_type(hostname, repository_name):
+    logger.info("Started executing get_repository_type()")
+
+    get_repositories_api = hostname + '/service/rest/beta/repositories'
+    response = requests.get(get_repositories_api)
+    repositories = response.json()
+    for repository in repositories:
+        logger.debug("Repository: " + str(repository))
+        if repository['name'] == repository_name:
+            logger.debug("Repository Name match found")
+            return repository['format']
+
+    logger.warning("No repository found with given name: " + str(repository_name))
+    return None
 
 
 def validate_args(args):
