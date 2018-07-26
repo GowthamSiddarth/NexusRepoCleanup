@@ -1,4 +1,4 @@
-import argparse, logging, re, requests, os
+import argparse, logging, re, requests, os, subprocess
 
 
 def create_nexus_credentials_at_workspace(host, username, password, repository):
@@ -55,6 +55,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--repository', help="Name of the repository to be cleaned", required=True)
+    parser.add_argument('-n', '--component', help="Name of the component whose assets are to be deleted", required=True)
     parser.add_argument('-k', '--keep', help="Number of assets/components to preserve after cleanup", required=True)
     parser.add_argument('--host', help="Host address of nexus repository", default="http://192.168.113.192:15921")
     parser.add_argument('-u', '--username', help="Username of the nexus repository admin", default="admin")
@@ -87,8 +88,10 @@ def main(logger):
     if repository_format == 'docker':
         logger.info("Using nexus-cli to un-tag extra blobs")
         create_nexus_credentials_at_workspace(args['host'], args['username'], args['password'], args['repository'])
+        subprocess.call(['nexus-cli', 'image', 'delete', '-name', args['component'], '-keep', str(args['keep'])])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
+
 
     logger.info("Main function execution finished.")
 
