@@ -143,7 +143,7 @@ def main(logger):
         logger.info("Using Nexus REST APIs to delete extra components")
         components = get_components(args['host'], args['repository'], args['component'])
         extra_components = sorted(components, key=lambda component: component.get('version'))[:-args['keep']]
-        delete_extra_components(args['host'], extra_components)
+        delete_extra_components(args['host'], args['username'], args['password'], extra_components)
 
     logger.info("Main function execution finished.")
 
