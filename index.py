@@ -13,6 +13,7 @@ def validate_args(args):
         r'(?::\d+)?'  # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
+    logger.info("validate_args function execution finished")
     return args['keep'].isdigit() and re.match(regex, args['host'])
 
 
@@ -35,6 +36,13 @@ def main(logger):
 
     args = parse_args()
     logger.debug("Arguments parsed are: " + str(args))
+
+    args_valid = validate_args(args)
+    if not args_valid:
+        logger.error("Arguments passed are not valid. Use -h for help")
+        return
+    else:
+        args['keep'] = 10 if int(args['keep']) > 10 else int(args['keep'])
 
     logger.info("Main function execution finished.")
 
