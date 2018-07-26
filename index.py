@@ -32,11 +32,11 @@ def get_components(host, repository_name, component_name):
 
             data = response.json()
             components.append(data['items'])
-            continuation_token = data['continuation_token']
+            continuation_token = data['continuationToken']
             if continuation_token is None:
                 break
 
-            get_components_api = host + '/service/rest/beta/components?repository=' + repository_name + '&continuation_token=' + continuation_token
+            get_components_api = host + '/service/rest/beta/components?repository=' + repository_name + '&continuationToken=' + continuation_token
 
         components = [component for component in list(itertools.chain(*components)) if
                       component['name'] == component_name]
