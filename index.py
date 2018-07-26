@@ -8,7 +8,7 @@ def delete_extra_components(host, username, password, extra_components):
     parsed_url = urlparse(url=host)
     component_del_base_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/components'
     for extra_component in extra_components:
-        component_del_api = component_del_base_api + '/' +  extra_component['id']
+        component_del_api = component_del_base_api + '/' + extra_component['id']
         logger.debug("Calling API to delete component: " + component_del_api)
         try:
             response = requests.delete(component_del_api)
@@ -21,10 +21,10 @@ def delete_extra_components(host, username, password, extra_components):
     logger.info("delete_extra_components function execution finished")
 
 
-def get_components(host, repository):
+def get_components(host, repository_name, component_name):
     logger.info("Started executing get_components()")
 
-    get_components_api, components = host + '/service/rest/beta/components?repository=' + repository, []
+    get_components_api, components = host + '/service/rest/beta/components?repository=' + repository_name, []
     try:
         while True:
             response = requests.get(get_components_api)
@@ -36,10 +36,11 @@ def get_components(host, repository):
             if continuation_token is None:
                 break
 
-            get_components_api = host + '/service/rest/beta/components?repository=' + repository + '&continuation_token=' + continuation_token
+            get_components_api = host + '/service/rest/beta/components?repository=' + repository_name + '&continuation_token=' + continuation_token
 
-        components = list(itertools.chain(*components))
-        logger.info("%d components found in the repo %s" % (len(components), repository))
+        components = [component for component in list(itertools.chain(*components)) if
+                      component['name'] == component_name]
+        logger.info("%d components found in the repo %s" % (len(components), repository_name))
         return components
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + e)
@@ -104,7 +105,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--repository', help="Name of the repository to be cleaned", required=True)
-    parser.add_argument('-n', '--component', help="Name of the component whose assets are to be deleted", required=True)
+    parser.add_argument('-c', '--component', help="Name of the component whose assets are to be deleted", required=True)
     parser.add_argument('-k', '--keep', help="Number of assets/components to preserve after cleanup", required=True)
     parser.add_argument('--host', help="Host address of nexus repository", default="http://192.168.113.192:15921")
     parser.add_argument('-u', '--username', help="Username of the nexus repository admin", default="admin")
@@ -140,7 +141,7 @@ def main(logger):
         subprocess.call(['nexus-cli', 'image', 'delete', '-name', args['component'], '-keep', str(args['keep'])])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
-        components = get_components(args['host'], args['repository'])
+        components = get_components(args['host'], args['repository'], args['component'])
         extra_components = sorted(components, key=lambda component: component.get('version'))[:-args['keep']]
         delete_extra_components(args['host'], extra_components)
 
