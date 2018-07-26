@@ -1,7 +1,7 @@
 import argparse, logging, re, requests
 
 
-def get_repository_type(hostname, repository_name):
+def get_repository_format(hostname, repository_name):
     logger.info("Started executing get_repository_type()")
 
     get_repositories_api = hostname + '/service/rest/beta/repositories'
@@ -59,6 +59,13 @@ def main(logger):
         return
     else:
         args['keep'] = 10 if int(args['keep']) > 10 else int(args['keep'])
+
+    repository_format = get_repository_format(args['host'], args['repository'])
+    if repository_format is None:
+        logger.info("Repository Format returned is None. Returning execution from here!")
+        return
+    else:
+        logger.info("Repository Format of %s is %s" % (args['repository'], repository_format))
 
     logger.info("Main function execution finished.")
 
