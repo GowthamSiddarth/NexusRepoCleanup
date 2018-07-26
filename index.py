@@ -1,4 +1,17 @@
-import argparse
+import argparse, logging
+
+
+def init_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
 
 
 def init():
@@ -12,6 +25,7 @@ def init():
 
 
 def main():
+
     args = init()
     print(args)
 
