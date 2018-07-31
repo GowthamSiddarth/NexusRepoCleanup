@@ -105,3 +105,6 @@ venv.bak/
 
 # IDEA
 .idea/
+
+# Python 2.x compatible code
+python2.x/
