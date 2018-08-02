@@ -38,10 +38,14 @@ def get_components(host, repository_name, component_name):
 
             get_components_api = host + '/service/rest/beta/components?repository=' + repository_name + '&continuationToken=' + continuation_token
 
-        components = [component for component in list(itertools.chain(*components)) if
-                      component['name'] == component_name]
-        logger.info("%d components found in the repo %s for %s" % (len(components), repository_name, component_name))
-        return components
+        if component_name is None:
+            logger.info("Component Name passed is None")
+            return set([component['name'] for component in list(itertools.chain(*components))])
+        else:
+            components = [component for component in list(itertools.chain(*components)) if
+            component['name'] == component_name]
+            logger.info("%d components found in the repo %s for %s" % (len(components), repository_name, component_name))
+            return components
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + str(e))
         return None
@@ -105,7 +109,7 @@ def parse_args():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--repository', help="Name of the repository to be cleaned", required=True)
-    parser.add_argument('-c', '--component', help="Name of the component whose assets are to be deleted", required=True)
+    parser.add_argument('-c', '--component', help="Name of the component whose assets are to be deleted")
     parser.add_argument('-k', '--keep', help="Number of assets/components to preserve after cleanup", required=True)
     parser.add_argument('--host', help="Host address of nexus repository", default="http://192.168.113.192:15921")
     parser.add_argument('-u', '--username', help="Username of the nexus repository admin", default="admin")
