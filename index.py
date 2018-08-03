@@ -122,7 +122,8 @@ def get_components(host, repository_name, component_name, repository_format):
             logger.info("repository_format is maven2")
             components = group_by_components(list(itertools.chain(*components)), component_name)
             logger.info("%d components found in repo %s for %s" % (len(components), repository_name, component_name))
-            return components
+
+        return components
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + str(e))
         return None
