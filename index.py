@@ -40,7 +40,8 @@ def compact_blob_store(host, username, password, task_name):
     logger.debug("task_id returned as " + str(task_id))
 
     if task_id is not None:
-        task_run_api = host + '/service/rest/beta/tasks/' + task_id + '/run'
+        parsed_url = urlparse(url=host)
+        task_run_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/tasks/' + task_id + '/run'
         try:
             response = requests.get(task_run_api)
             response.raise_for_status()
