@@ -2,10 +2,11 @@ import argparse, logging, re, requests, os, subprocess, itertools
 from urllib.parse import urlparse
 
 
-def get_task_id(host, task_name):
+def get_task_id(host, username, password, task_name):
     logger.info("Started executing get_task_id()")
 
-    get_tasks_api = host + '/service/rest/beta/tasks?type=blobstore.compact'
+    parsed_url = urlparse(url=host)
+    get_tasks_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/tasks?type=blobstore.compact'
     try:
         while True:
             response = requests.get(get_tasks_api)
@@ -22,7 +23,8 @@ def get_task_id(host, task_name):
             if continuation_token is None:
                 break
 
-            get_tasks_api = host + '/service/rest/beta/tasks?type=blobstore.compact' + '&continuationToken=' + continuation_token
+            get_tasks_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/tasks?type=blobstore.compact'\
+                            + '&continuationToken=' + continuation_token
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + str(e))
         return None
@@ -31,10 +33,10 @@ def get_task_id(host, task_name):
     return None
 
 
-def compact_blob_store(host, task_name):
+def compact_blob_store(host, username, password, task_name):
     logger.info("Started executing compact_blob_store()")
 
-    task_id = get_task_id(host, task_name)
+    task_id = get_task_id(host, username, password, task_name)
     logger.debug("task_id returned as " + str(task_id))
 
     if task_id is not None:
@@ -225,7 +227,7 @@ def main(logger):
             logger.debug("Component to be cleaned using nexus-cli: %s", component)
             subprocess.call(['nexus-cli', 'image', 'delete', '-name', component, '-keep', str(args['keep'])])
 
-        compact_blob_store(args['host'], args['task'])
+        compact_blob_store(args['host'], args['username'], args['password'], args['task'])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
         for component in components.keys():
