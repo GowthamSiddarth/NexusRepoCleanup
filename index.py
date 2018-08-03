@@ -2,6 +2,35 @@ import argparse, logging, re, requests, os, subprocess, itertools
 from urllib.parse import urlparse
 
 
+def get_task_id(host, task_name):
+    logger.info("Started executing compact_blob_store()")
+
+    get_tasks_api = host + '/service/rest/beta/tasks?type=blobstore.compact'
+    try:
+        while True:
+            response = requests.get(get_tasks_api)
+            response.raise_for_status()
+
+            data = response.json()
+            tasks = data['items']
+            for task in tasks:
+                logger.debug("task_name passed as arg: %s, current task_name: %s", (task_name, task['name']))
+                if task['name'] == task_name:
+                    return task['id']
+
+            continuation_token = data['continuationToken']
+            if continuation_token is None:
+                break
+
+            get_tasks_api = host + '/service/rest/beta/tasks?type=blobstore.compact' + '&continuationToken=' + continuation_token
+    except requests.exceptions.RequestException as e:
+        logger.error("Exception occurred: " + str(e))
+        return None
+
+    logger.info("Finished executing compact_blob_store")
+    return None
+
+
 def delete_extra_components(host, username, password, extra_components):
     logger.info("Started executing delete_extra_components()")
 
@@ -144,6 +173,7 @@ def parse_args():
     parser.add_argument('--host', help="Host address of nexus repository", default="http://192.168.113.192:15921")
     parser.add_argument('-u', '--username', help="Username of the nexus repository admin", default="admin")
     parser.add_argument('-p', '--password', help="Password of the nexus repository admin", default="admin123")
+    parser.add_argument('-t', '--task', help="Name of blobstore compact task", default="BlobStoreCleanUp")
 
     logger.info("parse_args function execution finished")
     return vars(parser.parse_args())
@@ -176,6 +206,8 @@ def main(logger):
         for component in components:
             logger.debug("Component to be cleaned using nexus-cli: %s", component)
             subprocess.call(['nexus-cli', 'image', 'delete', '-name', component, '-keep', str(args['keep'])])
+
+
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
         for component in components.keys():
