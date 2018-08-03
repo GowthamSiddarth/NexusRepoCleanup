@@ -35,7 +35,7 @@ def compact_blob_store(host, task_name):
     logger.info("Started executing compact_blob_store()")
 
     task_id = get_task_id(host, task_name)
-    logger.debug("task_id returened as " + str(task_id))
+    logger.debug("task_id returned as " + str(task_id))
 
     if task_id is not None:
         task_run_api = host + '/service/rest/beta/tasks/' + task_id + '/run'
@@ -225,7 +225,7 @@ def main(logger):
             logger.debug("Component to be cleaned using nexus-cli: %s", component)
             subprocess.call(['nexus-cli', 'image', 'delete', '-name', component, '-keep', str(args['keep'])])
 
-
+        compact_blob_store(args['host'], args['task'])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
         for component in components.keys():
