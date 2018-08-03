@@ -43,7 +43,7 @@ def compact_blob_store(host, username, password, task_name):
         parsed_url = urlparse(url=host)
         task_run_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/tasks/' + task_id + '/run'
         try:
-            response = requests.get(task_run_api)
+            response = requests.post(task_run_api)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             logger.error("Exception occurred: " + str(e))
