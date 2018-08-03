@@ -21,7 +21,21 @@ def delete_extra_components(host, username, password, extra_components):
     logger.info("delete_extra_components function execution finished")
 
 
-def get_components(host, repository_name, component_name):
+def group_by_components(components, component_name=None):
+    logger.info("Started executing group_by_components()")
+
+    components_group = {}
+    for component in components:
+        if component_name is None or component_name == component['name']:
+            components_group[component['name']] = components_group.get(component['name'], []) +\
+                                                  [{'id': component['id'], 'version': component['version']}]
+
+    logger.debug("Components Group:" + str(components_group))
+    logger.info("Finished executing group_by_components")
+    return components_group
+
+
+def get_components(host, repository_name, component_name, repository_type):
     logger.info("Started executing get_components()")
 
     get_components_api, components = host + '/service/rest/beta/components?repository=' + repository_name, []
@@ -38,13 +52,14 @@ def get_components(host, repository_name, component_name):
 
             get_components_api = host + '/service/rest/beta/components?repository=' + repository_name + '&continuationToken=' + continuation_token
 
-        if component_name is None:
-            logger.info("Component Name passed is None")
+        if repository_type == 'docker':
+            logger.info("repository_type is docker")
             return set([component['name'] for component in list(itertools.chain(*components))])
-        else:
+        elif repository_type == 'maven2':
             components = [component for component in list(itertools.chain(*components)) if
-            component['name'] == component_name]
-            logger.info("%d components found in the repo %s for %s" % (len(components), repository_name, component_name))
+                          component['name'] == component_name]
+            logger.info(
+                "%d components found in the repo %s for %s" % (len(components), repository_name, component_name))
             return components
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + str(e))
