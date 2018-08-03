@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 
 def get_task_id(host, task_name):
-    logger.info("Started executing compact_blob_store()")
+    logger.info("Started executing get_task_id()")
 
     get_tasks_api = host + '/service/rest/beta/tasks?type=blobstore.compact'
     try:
@@ -27,8 +27,25 @@ def get_task_id(host, task_name):
         logger.error("Exception occurred: " + str(e))
         return None
 
-    logger.info("Finished executing compact_blob_store")
+    logger.info("Finished executing get_task_id")
     return None
+
+
+def compact_blob_store(host, task_name):
+    logger.info("Started executing compact_blob_store()")
+
+    task_id = get_task_id(host, task_name)
+    logger.debug("task_id returened as " + str(task_id))
+
+    if task_id is not None:
+        task_run_api = host + '/service/rest/beta/tasks/' + task_id + '/run'
+        try:
+            response = requests.get(task_run_api)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logger.error("Exception occurred: " + str(e))
+
+    logger.info("Finished executing compact_blob_store")
 
 
 def delete_extra_components(host, username, password, extra_components):
@@ -56,7 +73,8 @@ def get_matching_components_by_name(components, component_name):
         return set([component['name'] for component in components])
     else:
         for component in components:
-            logger.debug("Component Name passed as arg: %s, Current Component Name: %s" % (component_name, component['name']))
+            logger.debug(
+                "Component Name passed as arg: %s, Current Component Name: %s" % (component_name, component['name']))
             if component['name'] == component_name:
                 logger.debug("Match found for Component Name %s" % component_name)
                 return [component_name]
@@ -71,7 +89,7 @@ def group_by_components(components, component_name):
     components_group = {}
     for component in components:
         if component_name is None or component_name == component['name']:
-            components_group[component['name']] = components_group.get(component['name'], []) +\
+            components_group[component['name']] = components_group.get(component['name'], []) + \
                                                   [{'id': component['id'], 'version': component['version']}]
 
     logger.debug("Components Group:" + str(components_group))
@@ -211,7 +229,8 @@ def main(logger):
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
         for component in components.keys():
-            extra_components = sorted(components[component], key=lambda component: component.get('version'))[:-args['keep']]
+            extra_components = sorted(components[component], key=lambda component: component.get('version'))[
+                               :-args['keep']]
             delete_extra_components(args['host'], args['username'], args['password'], extra_components)
 
     logger.info("Main function execution finished.")
