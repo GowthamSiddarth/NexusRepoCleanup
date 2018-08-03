@@ -21,7 +21,22 @@ def delete_extra_components(host, username, password, extra_components):
     logger.info("delete_extra_components function execution finished")
 
 
-def group_by_components(components, component_name=None):
+def get_matching_components_by_name(components, component_name):
+    if component_name is None:
+        logger.info("Component Name is None, hence returning all components\' names")
+        return set([component['name'] for component in components])
+    else:
+        for component in components:
+            logger.debug("Component Name passed as arg: %s, Current Component Name: %s" % (component_name, component['name']))
+            if component['name'] == component_name:
+                logger.debug("Match found for Component Name %s" % component_name)
+                return [component_name]
+
+        logger.debug("No Match found for component name %s" % component_name)
+        return []
+
+
+def group_by_components(components, component_name):
     logger.info("Started executing group_by_components()")
 
     components_group = {}
@@ -35,7 +50,7 @@ def group_by_components(components, component_name=None):
     return components_group
 
 
-def get_components(host, repository_name, component_name, repository_type):
+def get_components(host, repository_name, component_name, repository_format):
     logger.info("Started executing get_components()")
 
     get_components_api, components = host + '/service/rest/beta/components?repository=' + repository_name, []
@@ -52,14 +67,14 @@ def get_components(host, repository_name, component_name, repository_type):
 
             get_components_api = host + '/service/rest/beta/components?repository=' + repository_name + '&continuationToken=' + continuation_token
 
-        if repository_type == 'docker':
-            logger.info("repository_type is docker")
-            return set([component['name'] for component in list(itertools.chain(*components))])
-        elif repository_type == 'maven2':
-            components = [component for component in list(itertools.chain(*components)) if
-                          component['name'] == component_name]
-            logger.info(
-                "%d components found in the repo %s for %s" % (len(components), repository_name, component_name))
+        if repository_format == 'docker':
+            logger.info("repository_format is docker")
+            components = get_matching_components_by_name(list(itertools.chain(*components)), component_name)
+            logger.info("%d components found in repo %s for %s" % (len(components), repository_name, component_name))
+        elif repository_format == 'maven2':
+            logger.info("repository_format is maven2")
+            components = group_by_components(list(itertools.chain(*components)), component_name)
+            logger.info("%d components found in repo %s for %s" % (len(components), repository_name, component_name))
             return components
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + str(e))
@@ -154,13 +169,14 @@ def main(logger):
     else:
         logger.info("Repository Format of %s is %s" % (args['repository'], repository_format))
 
+    components = get_components(args['host'], args['repository'], args['component'], repository_format)
     if repository_format == 'docker':
         logger.info("Using nexus-cli to un-tag extra blobs")
         create_nexus_credentials_at_workspace(args['host'], args['username'], args['password'], args['repository'])
         subprocess.call(['nexus-cli', 'image', 'delete', '-name', args['component'], '-keep', str(args['keep'])])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
-        components = get_components(args['host'], args['repository'], args['component'])
+
         extra_components = sorted(components, key=lambda component: component.get('version'))[:-args['keep']]
         delete_extra_components(args['host'], args['username'], args['password'], extra_components)
 
