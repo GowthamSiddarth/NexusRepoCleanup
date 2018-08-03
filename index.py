@@ -137,9 +137,8 @@ def create_nexus_credentials_at_workspace(host, username, password, repository):
                   'nexus_username': '"%s"' % username,
                   'nexus_password': '"%s"' % password,
                   'nexus_repository': '"%s"' % repository}
-    file = open(workspace + '/.credentials', "w")
-    file.write(str(nexus_data))
-    file.close()
+    with open(workspace + '/.credentials', "w") as file:
+        [ file.write('{0}={1}\n'.format(key, value)) for key, value in nexus_data.items() ]
 
     logger.info("create_nexus_credentials_at_workspace function execution finished")
 
