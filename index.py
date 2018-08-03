@@ -173,12 +173,14 @@ def main(logger):
     if repository_format == 'docker':
         logger.info("Using nexus-cli to un-tag extra blobs")
         create_nexus_credentials_at_workspace(args['host'], args['username'], args['password'], args['repository'])
-        subprocess.call(['nexus-cli', 'image', 'delete', '-name', args['component'], '-keep', str(args['keep'])])
+        for component in components:
+            logger.debug("Component to be cleaned using nexus-cli: %s", component)
+            subprocess.call(['nexus-cli', 'image', 'delete', '-name', component, '-keep', str(args['keep'])])
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
-
-        extra_components = sorted(components, key=lambda component: component.get('version'))[:-args['keep']]
-        delete_extra_components(args['host'], args['username'], args['password'], extra_components)
+        for component in components.keys():
+            extra_components = sorted(components[component], key=lambda component: component.get('version'))[:-args['keep']]
+            delete_extra_components(args['host'], args['username'], args['password'], extra_components)
 
     logger.info("Main function execution finished.")
 
