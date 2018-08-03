@@ -15,7 +15,7 @@ def get_task_id(host, username, password, task_name):
             data = response.json()
             tasks = data['items']
             for task in tasks:
-                logger.debug("task_name passed as arg: %s, current task_name: %s", (task_name, task['name']))
+                logger.debug("task_name passed as arg: %s, current task_name: %s" % (task_name, task['name']))
                 if task['name'] == task_name:
                     return task['id']
 
