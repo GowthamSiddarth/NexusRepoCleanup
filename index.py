@@ -23,7 +23,7 @@ def get_task_id(host, username, password, task_name):
             if continuation_token is None:
                 break
 
-            get_tasks_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/tasks?type=blobstore.compact'\
+            get_tasks_api = parsed_url.scheme + '://' + username + ':' + password + '@' + parsed_url.netloc + '/service/rest/beta/tasks?type=blobstore.compact' \
                             + '&continuationToken=' + continuation_token
     except requests.exceptions.RequestException as e:
         logger.error("Exception occurred: " + str(e))
@@ -100,6 +100,9 @@ def group_by_components(components, component_name):
     return components_group
 
 
+def get_jenkins_build_number(version_tag): return int(version_tag[version_tag.rfind('.') + 1:])
+
+
 def get_components(host, repository_name, component_name, repository_format):
     logger.info("Started executing get_components()")
 
@@ -141,7 +144,7 @@ def create_nexus_credentials_at_workspace(host, username, password, repository):
                   'nexus_password': '"%s"' % password,
                   'nexus_repository': '"%s"' % repository}
     with open(workspace + '/.credentials', "w") as file:
-        [ file.write('{0}={1}\n'.format(key, value)) for key, value in nexus_data.items() ]
+        [file.write('{0}={1}\n'.format(key, value)) for key, value in nexus_data.items()]
 
     logger.info("create_nexus_credentials_at_workspace function execution finished")
 
@@ -232,8 +235,8 @@ def main(logger):
     elif repository_format == 'maven2':
         logger.info("Using Nexus REST APIs to delete extra components")
         for component in components.keys():
-            extra_components = sorted(components[component], key=lambda component: component.get('version'))[
-                               :-args['keep']]
+            extra_components = sorted(components[component], key=lambda component:
+                                                    get_jenkins_build_number(component.get('version')))[:-args['keep']]
             delete_extra_components(args['host'], args['username'], args['password'], extra_components)
 
     logger.info("Main function execution finished.")
